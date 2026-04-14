@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner Control Panel</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <!-- "{{ url_for('static', filename='css/styles.css') }}" -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <h2>ScanMatrix</h2>
+            
+            <div class="card">
+                <label>Search Barcode</label>
+                <div class="search-container">
+                    <input type="text" id="query" placeholder="Enter Serial #...">
+                    <button onclick="search()">Find</button>
+                </div>
+                <button onclick="clearHighlight()" style="margin-top: 10px; margin-left: 10px; background: #333; color: white;">Clear</button>
+            </div>
+
+            <div class="card">
+                <h3>System Status</h3>
+                <div id="status-container" class="status-badge">
+                    <span class="status-dot"></span>
+                    <span id="status-text">Monitoring</span>
+                </div>
+                <p id="count-text" style="color: var(--text-dim); margin-top: 10px;">Codes in view: 0</p>
+            </div>
+
+            <div class="card">
+                <h3>Calibration</h3>
+                <p style="font-size: 13px; color: var(--text-dim);">Map your camera view to the projector output.</p>
+                <button onclick="startCalibration()" id="cal-btn" style="width: 100%;">Start Calibration</button>
+                <div id="cal-step" style="margin-top: 10px; font-size: 14px; display: none;">
+                    Click on the <b>Top-Left</b> cross in the video.
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-view">
+            <div class="video-container">
+                <img id="camera-feed" src="{{ url_for('video_feed') }}" onclick="handleVideoClick(event)">
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const socket = io('/admin');
+        let isCalibrating = false;
+        let calPoints = [];
+        const calSteps = ["Top-Left", "Top-Right", "Bottom-Right", "Bottom-Left"];
+
+        socket.on('scan_complete', (data) => {
+            document.getElementById('count-text').innerText = `Codes in view: ${data.count}`;
+            document.getElementById('status-container').classList.add('status-active');
+            document.getElementById('status-text').innerText = "Inventory Ready";
+        });
+
+        socket.on('search_result', (data) => {
+            if (!data.found) {
+                alert(data.msg || "Code not found");
+            }
+        });
+
+        function search() {
+            const query = document.getElementById('query').value;
+            socket.emit('search', { query: query });
+        }
+
+        function clearHighlight() {
+            socket.emit('clear_highlight');
+        }
+
+        function startCalibration() {
+            isCalibrating = true;
+            calPoints = [];
+            document.getElementById('cal-step').style.display = 'block';
+            document.getElementById('cal-step').innerHTML = `Click on the <b>${calSteps[0]}</b> cross in the video.`;
+            // Tell projector to show markers
+            socket.emit('request_calibration_markers');
+        }
+
+        function handleVideoClick(e) {
+            if (!isCalibrating) return;
+
+            const rect = e.target.getBoundingClientRect();
+            // Map click to 1920x1080 coordinates
+            const x = (e.clientX - rect.left) * (1920 / rect.width);
+            const y = (e.clientY - rect.top) * (1080 / rect.height);
+            
+            calPoints.push([x, y]);
+            
+            if (calPoints.length < 4) {
+                document.getElementById('cal-step').innerHTML = `Click on the <b>${calSteps[calPoints.length]}</b> cross in the video.`;
+            } else {
+                finishCalibration();
+            }
+        }
+
+        function finishCalibration() {
+            isCalibrating = false;
+            document.getElementById('cal-step').style.display = 'none';
+            
+            // Assume projector is 1920x1080 for calibration mapping
+            const projPts = [[0,0], [1920,0], [1920,1080], [0,1080]];
+            
+            socket.emit('calibrate', {
+                camera_pts: calPoints,
+                projector_pts: projPts
+            });
+            alert("Calibration sent to server");
+        }
+    </script>
+</body>
+</html>

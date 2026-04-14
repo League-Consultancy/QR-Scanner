@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner Projector Output</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        body { cursor: none; background: black; overflow: hidden; }
+        #canvas { width: 100vw; height: 100vh; }
+    </style>
+</head>
+<body class="projector-surface">
+    <div id="marker" class="marker"></div>
+    
+    <!-- Calibration Overlays -->
+    <div id="cal-tl" class="calibration-cross" style="top: 0; left: 0; display: none;"></div>
+    <div id="cal-tr" class="calibration-cross" style="top: 0; right: 40px; display: none;"></div>
+    <div id="cal-br" class="calibration-cross" style="bottom: 40px; right: 40px; display: none;"></div>
+    <div id="cal-bl" class="calibration-cross" style="bottom: 40px; left: 0; display: none;"></div>
+
+    <script>
+        const socket = io('/projector');
+        const marker = document.getElementById('marker');
+        const crosses = ['cal-tl', 'cal-tr', 'cal-br', 'cal-bl'].map(id => document.getElementById(id));
+
+        socket.on('highlight', (data) => {
+            // data: {x, y} in projector coordinates
+            marker.style.display = 'block';
+            marker.style.left = (data.x / 1920 * 100) + 'vw';
+            marker.style.top = (data.y / 1080 * 100) + 'vh';
+        });
+
+        socket.on('clear', () => {
+            marker.style.display = 'none';
+            crosses.forEach(c => c.style.display = 'none');
+        });
+
+        socket.on('show_calibration', () => {
+            marker.style.display = 'none';
+            crosses.forEach(c => c.style.display = 'block');
+        });
+
+        // Toggle Fullscreen on click (helper for setup)
+        document.body.addEventListener('click', () => {
+             if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            }
+        });
+    </script>
+</body>
+</html>
