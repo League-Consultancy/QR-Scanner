@@ -4,7 +4,7 @@ import json
 import os
 
 class CalibrationManager:
-    def __init__(self, config_path='/home/ronak/Desktop/Projects/QR-Scanner/calibration.json'):
+    def __init__(self, config_path='./calibration.json'):
         self.config_path = config_path
         self.homography_matrix = None
         self.load_calibration()
@@ -20,7 +20,9 @@ class CalibrationManager:
         # Calculate Homography Matrix
         h, status = cv2.findHomography(src_pts, dst_pts)
         self.homography_matrix = h
-        self.save_calibration()
+        print("saved calibration data at",self.homography_matrix.tolist())
+        with open(self.config_path, 'w') as f:
+            json.dump(self.homography_matrix.tolist(), f)
         return h
 
     def map_point(self, x, y):
@@ -33,11 +35,6 @@ class CalibrationManager:
         point = np.array([[[x, y]]], dtype=np.float32)
         mapped_point = cv2.perspectiveTransform(point, self.homography_matrix)
         return mapped_point[0][0].tolist()
-
-    def save_calibration(self):
-        if self.homography_matrix is not None:
-            with open(self.config_path, 'w') as f:
-                json.dump(self.homography_matrix.tolist(), f)
 
     def load_calibration(self):
         if os.path.exists(self.config_path):

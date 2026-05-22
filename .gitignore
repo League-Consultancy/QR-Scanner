@@ -1,6 +1,8 @@
 docs
 __pycache__
-venv
+.venv
 *.png
-image-generator.py
+image_generator.py
 verify_scan.py
+test_cam.py
+*.json

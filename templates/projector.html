@@ -14,6 +14,8 @@
 <body class="projector-surface">
     <div id="marker" class="marker"></div>
     
+    <img id="projector-feed" src="{{ url_for('projector_feed') }}" style="position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: fill; z-index: -1;">
+    
     <!-- Calibration Overlays -->
     <div id="cal-tl" class="calibration-cross" style="top: 0; left: 0; display: none;"></div>
     <div id="cal-tr" class="calibration-cross" style="top: 0; right: 40px; display: none;"></div>
@@ -23,6 +25,7 @@
     <script>
         const socket = io('/projector');
         const marker = document.getElementById('marker');
+        const feed = document.getElementById('projector-feed');
         const crosses = ['cal-tl', 'cal-tr', 'cal-br', 'cal-bl'].map(id => document.getElementById(id));
 
         socket.on('highlight', (data) => {
@@ -30,16 +33,19 @@
             marker.style.display = 'block';
             marker.style.left = (data.x / 1920 * 100) + 'vw';
             marker.style.top = (data.y / 1080 * 100) + 'vh';
+            if (feed) feed.style.display = 'block';
         });
 
         socket.on('clear', () => {
             marker.style.display = 'none';
             crosses.forEach(c => c.style.display = 'none');
+            if (feed) feed.style.display = 'block';
         });
 
         socket.on('show_calibration', () => {
             marker.style.display = 'none';
             crosses.forEach(c => c.style.display = 'block');
+            if (feed) feed.style.display = 'none';
         });
 
         // Toggle Fullscreen on click (helper for setup)
