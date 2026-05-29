@@ -11,9 +11,10 @@ app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Initialize components
-scanner = Scanner(num_workers=8)
+scanner = Scanner(num_workers=4)
 calibration = CalibrationManager()
-camera = cv2.VideoCapture(4)  # Use 0 for default camera
+camera = cv2.VideoCapture(0)  # Use 0 for default camera
+# camera.set(cv2.CAP_PROP_FPS,2)
 camera.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc(*'MJPG'))
 camera.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
 camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
@@ -25,10 +26,12 @@ last_scan_time = 0
 current_search_query = None
 
 def camera_loop():
+
     global current_frame, is_scanning, last_scan_time
     while True:
         success, frame = camera.read()
         if success:
+            print(frame.shape)
             current_frame = frame
             
             # Auto-rescan if motion detected (and not currently scanning)

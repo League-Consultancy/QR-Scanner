@@ -17,7 +17,7 @@ cv2.moveWindow(window_name, 1920 * PROJECTOR_MONITOR_INDEX, 0)
 cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
 
-camera = cv2.VideoCapture(4)  # Use 0 for default camera
+camera = cv2.VideoCapture(0)  # Use 0 for default camera
 camera.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc(*'MJPG'))
 camera.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
 camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
