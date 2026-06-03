@@ -85,14 +85,15 @@ class Scanner:
                 for res_list in results:
                     all_results.extend(res_list)
 
-        new_inventory = {}
-        for item in all_results:
-            new_inventory[item['data']] = {
+        new_inventory = {
+            item['data']: {
                 'center': item['center'],
                 'points': item['points']
-            }
-        
-        self.inventory = new_inventory
+                }
+                for item in all_results
+                }
+
+        self.inventory.update(new_inventory)
         self.last_frame = frame.copy()
         
         print(f"Scanned {len(new_inventory)} unique codes in {time.time() - start_time:.3f}s")
@@ -100,10 +101,3 @@ class Scanner:
 
     def get_code_position(self, code_data):
         return self.inventory.get(code_data)
-
-    def detect_motion(self, current_frame, threshold=50000):
-        if self.last_frame is None: return True
-        diff = cv2.absdiff(cv2.cvtColor(self.last_frame, cv2.COLOR_BGR2GRAY), 
-                          cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY))
-        _, thresh = cv2.threshold(diff, 25, 255, cv2.THRESH_BINARY)
-        return np.sum(thresh) > threshold

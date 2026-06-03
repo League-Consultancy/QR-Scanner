@@ -11,9 +11,9 @@ app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Initialize components
-scanner = Scanner(num_workers=4)
+scanner = Scanner(num_workers=2)
 calibration = CalibrationManager()
-camera = cv2.VideoCapture(0)  # Use 0 for default camera
+camera = cv2.VideoCapture(1)  # Use 0 for default camera
 # camera.set(cv2.CAP_PROP_FPS,2)
 camera.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc(*'MJPG'))
 camera.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
@@ -24,23 +24,26 @@ current_frame = None
 is_scanning = False
 last_scan_time = 0
 current_search_query = None
+show_calibration_markers = False
 
 def camera_loop():
-
-    global current_frame, is_scanning, last_scan_time
+    global current_frame
     while True:
         success, frame = camera.read()
         if success:
-            print(frame.shape)
             current_frame = frame
-            
-            # Auto-rescan if motion detected (and not currently scanning)
-            if not is_scanning and (time.time() - last_scan_time > 5):
-                if scanner.detect_motion(frame):
-                    print("Motion detected, triggering rescan...")
-                    threading.Thread(target=perform_scan, args=(frame.copy(),)).start()
-        
-        time.sleep(0.03)  # ~30 FPS
+        # Yield briefly so the CPU isn't pegged, but fast enough to prevent OpenCV queue lag
+        time.sleep(0.01)
+
+def processing_loop():
+    global is_scanning, last_scan_time
+    while True:
+        frame_to_process = current_frame
+        if frame_to_process is not None and not is_scanning:
+            if time.time() - last_scan_time > 5:
+                print("Running scheduled 5-second scan...")
+                threading.Thread(target=perform_scan, args=(frame_to_process.copy(),)).start()
+        time.sleep(1.0)
 
 def perform_scan(frame):
     global is_scanning, last_scan_time
@@ -54,61 +57,6 @@ def perform_scan(frame):
 @app.route('/')
 def admin():
     return render_template('admin.html')
-
-@app.route('/projector')
-def projector():
-    return render_template('projector.html')
-
-def gen_projector_frames():
-    global current_search_query
-    while True:
-        if current_frame is not None:
-            # Resize camera frame to 1920x1080 (the coordinate space used for homography)
-            frame_resized = cv2.resize(current_frame, (1920, 1080))
-            
-            # Draw marked matrix barcodes from scanner inventory scaled to 1920x1080
-            h_orig, w_orig = current_frame.shape[:2]
-            scale_x = 1920.0 / w_orig if w_orig > 0 else 1.0
-            scale_y = 1080.0 / h_orig if h_orig > 0 else 1.0
-            
-            try:
-                # Thread-safe copy of inventory
-                inventory_copy = dict(scanner.inventory)
-                for code_data, info in inventory_copy.items():
-                    points = info.get('points', [])
-                    if len(points) == 4:
-                        pts = np.array([[int(p[0] * scale_x), int(p[1] * scale_y)] for p in points], dtype=np.int32)
-                        
-                        if current_search_query and str(code_data) == str(current_search_query):
-                            color = (68, 68, 255)
-                            thickness = 3
-                        else:
-                            color = (136, 255, 0)
-                            thickness = 2
-                            
-                        # Draw bounding polygon
-                        cv2.polylines(frame_resized, [pts], isClosed=True, color=color, thickness=thickness)
-            except Exception as e:
-                print(f"Error drawing projector overlay: {e}")
-
-            # Warp the frame using the homography matrix
-            if calibration.homography_matrix is not None:
-                warped = cv2.warpPerspective(frame_resized, calibration.homography_matrix, (1920, 1080))
-            else:
-                # If not calibrated, display a blank black frame (or a grid/message)
-                warped = np.zeros((1080, 1920, 3), dtype=np.uint8)
-                cv2.putText(warped, "Not Calibrated", (800, 540), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 3)
-
-            ret, buffer = cv2.imencode('.jpg', warped)
-            frame = buffer.tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-            
-        time.sleep(0.05)
-
-@app.route('/projector_feed')
-def projector_feed():
-    return Response(gen_projector_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 def gen_frames():
     global current_search_query
@@ -151,7 +99,7 @@ def gen_frames():
             except Exception as e:
                 print(f"Error drawing overlay: {e}")
 
-            ret, buffer = cv2.imencode('.jpg',  preview)
+            ret, buffer = cv2.imencode('.jpg', preview, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
             frame = buffer.tobytes()
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
@@ -167,22 +115,20 @@ def video_feed():
 def admin_connect():
     print('Admin connected')
 
-@socketio.on('connect', namespace='/projector')
-def projector_connect():
-    print('Projector connected')
-
 @socketio.on('calibrate', namespace='/admin')
 def handle_calibration(data):
+    global show_calibration_markers
     # data: {'camera_pts': [[x,y], ...], 'projector_pts': [[x,y], ...]}
     print("Received calibration data")
     calibration.calculate_homography(data['camera_pts'], data['projector_pts'])
-    socketio.emit('clear', {}, namespace='/projector')
+    show_calibration_markers = False
     emit('status', {'msg': 'Calibration saved'}, namespace='/admin')
 
 @socketio.on('request_calibration_markers', namespace='/admin')
 def handle_cal_markers():
+    global show_calibration_markers
     print("Projecting calibration markers")
-    socketio.emit('show_calibration', {}, namespace='/projector')
+    show_calibration_markers = True
 
 @socketio.on('search', namespace='/admin')
 def handle_search(data):
@@ -202,7 +148,6 @@ def handle_search(data):
         
         if proj_pos:
             print(f"Highlighting {query} at {proj_pos}")
-            socketio.emit('highlight', {'x': proj_pos[0], 'y': proj_pos[1]}, namespace='/projector')
             emit('search_result', {'found': True, 'pos': proj_pos}, namespace='/admin')
         else:
             emit('search_result', {'found': False, 'msg': 'Calibration missing'}, namespace='/admin')
@@ -211,11 +156,98 @@ def handle_search(data):
 
 @socketio.on('clear_highlight', namespace='/admin')
 def handle_clear():
-    global current_search_query
+    global current_search_query, show_calibration_markers
     current_search_query = None
-    socketio.emit('clear', {}, namespace='/projector')
+    show_calibration_markers = False
+
+def main_gui_loop():
+    global current_frame, current_search_query, show_calibration_markers
+    
+    PROJECTOR_MONITOR_INDEX = 1 
+    window_name = "Projector_Output"
+    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+    cv2.moveWindow(window_name, 1920 * PROJECTOR_MONITOR_INDEX, 0)
+    cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    
+    while True:
+        # Create a black frame for projection (1920x1080 space)
+        black_frame = np.zeros((1080, 1920, 3), dtype=np.uint8)
+        
+        if show_calibration_markers:
+            # Draw 4 calibration crosses (offset by 20 pixels inside corners)
+            # Top-Left (20, 20), Top-Right (1900, 20), Bottom-Right (1900, 1060), Bottom-Left (20, 1060)
+            cross_color = (0, 255, 0) # Green BGR
+            # Top-Left
+            cv2.line(black_frame, (0, 20), (40, 20), cross_color, 2)
+            cv2.line(black_frame, (20, 0), (20, 40), cross_color, 2)
+            # Top-Right
+            cv2.line(black_frame, (1880, 20), (1920, 20), cross_color, 2)
+            cv2.line(black_frame, (1900, 0), (1900, 40), cross_color, 2)
+            # Bottom-Right (Center at 1900, 1060)
+            cv2.line(black_frame, (1880, 1060), (1920, 1060), cross_color, 2)
+            cv2.line(black_frame, (1900, 1040), (1900, 1080), cross_color, 2)
+            # Bottom-Left (Center at 20, 1060)
+            cv2.line(black_frame, (0, 1060), (40, 1060), cross_color, 2)
+            cv2.line(black_frame, (20, 1040), (20, 1080), cross_color, 2)
+            
+            # Calibration crosses are drawn raw (no warp)
+            cv2.imshow(window_name, black_frame)
+        else:
+            # Draw scanned outlines from inventory (in camera coordinates)
+            if current_frame is not None:
+                h_orig, w_orig = current_frame.shape[:2]
+                scale_x = 1920.0 / w_orig if w_orig > 0 else 1.0
+                scale_y = 1080.0 / h_orig if h_orig > 0 else 1.0
+                
+                try:
+                    inventory_copy = dict(scanner.inventory)
+                    for code_data, info in inventory_copy.items():
+                        points = info.get('points', [])
+                        if len(points) == 4:
+                            pts = np.array([[int(p[0] * scale_x), int(p[1] * scale_y)] for p in points], dtype=np.int32)
+                            
+                            if current_search_query and str(code_data) == str(current_search_query):
+                                color = (68, 68, 255) # Red-orange
+                                thickness = 4
+                                
+                                # Draw target circle indicator
+                                cx, cy = info.get('center', (0, 0))
+                                cx_scaled = int(cx * scale_x)
+                                cy_scaled = int(cy * scale_y)
+                                cv2.circle(black_frame, (cx_scaled, cy_scaled), 40, (68, 68, 255), 3)
+                            else:
+                                color = (136, 255, 0) # Green-cyan
+                                thickness = 2
+                                
+                            cv2.polylines(black_frame, [pts], isClosed=True, color=color, thickness=thickness)
+                except Exception as e:
+                    print(f"Error drawing on black_frame: {e}")
+            
+            # Warp perspective using the homography matrix
+            if calibration.homography_matrix is not None:
+                warped = cv2.warpPerspective(black_frame, calibration.homography_matrix, (1920, 1080))
+            else:
+                warped = np.zeros((1080, 1920, 3), dtype=np.uint8)
+                cv2.putText(warped, "Not Calibrated", (800, 540), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 3)
+                
+            cv2.imshow(window_name, warped)
+            
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+        time.sleep(0.03)
 
 if __name__ == '__main__':
-    # Start camera thread
+    # Start background threads for camera and processing
     threading.Thread(target=camera_loop, daemon=True).start()
-    socketio.run(app, host='0.0.0.0', port=5000, debug=False)
+    threading.Thread(target=processing_loop, daemon=True).start()
+    
+    # Start Flask-SocketIO in a background thread
+    threading.Thread(
+        target=lambda: socketio.run(app, host='0.0.0.0', port=5000, debug=False, use_reloader=False),
+        daemon=True
+    ).start()
+    
+    print("ScanMatrix GUI Controller active at http://localhost:5000")
+    
+    # Run the native projector GUI loop on the main thread
+    main_gui_loop()
