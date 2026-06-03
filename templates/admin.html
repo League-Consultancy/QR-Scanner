@@ -32,6 +32,20 @@
             </div>
 
             <div class="card">
+                <h3>Camera Source</h3>
+                <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 12px;">Choose the video capture source.</p>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <select id="camera-select" style="background: #0f111a; border: 1px solid #2d303e; color: white; padding: 10px; border-radius: 8px; font-size: 14px; width: 100%; outline: none;">
+                        <option value="">Detecting...</option>
+                    </select>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="applyCamera()" style="flex: 1; padding: 10px 12px; font-size: 14px;">Select</button>
+                        <button onclick="refreshCameras()" style="background: #333; color: white; border: 1px solid #444; padding: 10px 12px; font-size: 14px;">Refresh</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
                 <h3>Calibration</h3>
                 <p style="font-size: 13px; color: var(--text-dim);">Map your camera view to the projector output.</p>
                 <button onclick="startCalibration()" id="cal-btn" style="width: 100%;">Start Calibration</button>
@@ -54,6 +68,42 @@
         let calPoints = [];
         const calSteps = ["Top-Left", "Top-Right", "Bottom-Right", "Bottom-Left"];
 
+        socket.on('camera_settings', (data) => {
+            const select = document.getElementById('camera-select');
+            select.innerHTML = '';
+            if (!data.available || data.available.length === 0) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.innerText = 'No cameras found';
+                select.appendChild(opt);
+            } else {
+                data.available.forEach((idx) => {
+                    const opt = document.createElement('option');
+                    opt.value = idx;
+                    opt.innerText = `Camera ${idx}` + (idx === data.active ? ' (Active)' : '');
+                    if (idx === data.active) {
+                        opt.selected = true;
+                    }
+                    select.appendChild(opt);
+                });
+            }
+        });
+
+        socket.on('status', (data) => {
+            if (data.msg) {
+                const statusText = document.getElementById('status-text');
+                if (statusText) {
+                    statusText.innerText = data.msg;
+                    // Reset to Monitoring after 3 seconds
+                    setTimeout(() => {
+                        if (statusText.innerText === data.msg) {
+                            statusText.innerText = "Monitoring";
+                        }
+                    }, 3000);
+                }
+            }
+        });
+
         socket.on('scan_complete', (data) => {
             document.getElementById('count-text').innerText = `Codes in view: ${data.count}`;
             document.getElementById('status-container').classList.add('status-active');
@@ -69,6 +119,18 @@
         function search() {
             const query = document.getElementById('query').value;
             socket.emit('search', { query: query });
+        }
+
+        function applyCamera() {
+            const select = document.getElementById('camera-select');
+            const idx = select.value;
+            if (idx !== '') {
+                socket.emit('select_camera', { index: parseInt(idx) });
+            }
+        }
+
+        function refreshCameras() {
+            socket.emit('refresh_cameras');
         }
 
         function clearHighlight() {

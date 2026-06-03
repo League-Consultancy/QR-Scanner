@@ -6,14 +6,39 @@ import threading
 import time
 from scanner import Scanner
 from calibration import CalibrationManager
+import sys
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
+MAX_INDEX = 6  # Adjust if needed
+
+available_cameras_index = None
+
+for index in range(MAX_INDEX):
+    cap = cv2.VideoCapture(index)
+
+    if cap.isOpened():
+        ret, frame = cap.read()
+
+        if ret:
+            print(f"Camera found at index {index}")
+            available_cameras_index = index
+            cap.release()
+            break
+        else:
+            print(f"Index {index} opened but no frames received")
+    
+    cap.release()
+    
+if available_cameras_index is None:
+    print("No camera Found.")
+    sys.exit()
+
 # Initialize components
 scanner = Scanner(num_workers=2)
 calibration = CalibrationManager()
-camera = cv2.VideoCapture(1)  # Use 0 for default camera
+camera = cv2.VideoCapture(available_cameras_index)  # Use 0 for default camera
 # camera.set(cv2.CAP_PROP_FPS,2)
 camera.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc(*'MJPG'))
 camera.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
