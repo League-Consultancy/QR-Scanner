@@ -5,17 +5,31 @@ ScanMatrix is a tool that detects barcodes using a camera and projects highlight
 ---
 
 ## 1. Setup
-Run the setup script to install `uv` (if needed), Python 3.12.13, and all dependencies:
+Run the setup script corresponding to your operating system to install `uv` (if needed), Python 3.12.13, and all dependencies:
+
+**Linux:**
 ```bash
-./setup.sh
+./setup-linux.sh
+```
+
+**Windows (Command Prompt):**
+```cmd
+setup-windows.bat
 ```
 
 ---
 
 ## 2. Run the App
 Start the system by running the launch script:
+
+**Linux:**
 ```bash
-./run.sh
+./run-linux.sh
+```
+
+**Windows (Command Prompt):**
+```cmd
+run-windows.bat
 ```
 * This opens the **fullscreen projector output** on your secondary screen.
 * This starts the **Web Control Panel** at: `http://localhost:5000` (or `http://<your-ip-address>:5000` from any tablet/phone on the network).

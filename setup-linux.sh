@@ -50,4 +50,4 @@ else
 fi
 
 echo "=== Setup Completed Successfully ==="
-echo "To Run the Software, run: ./run.sh"
+echo "To Run the Software, run: ./run-linux.sh"

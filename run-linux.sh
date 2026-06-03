@@ -5,7 +5,7 @@ set -e
 
 # Check if virtual environment exists
 if [ ! -d ".venv" ]; then
-    echo "Error: Virtual environment (.venv) not found. Please run ./setup.sh first." >&2
+    echo "Error: Virtual environment (.venv) not found. Please run ./setup-linux.sh first." >&2
     exit 1
 fi
 
