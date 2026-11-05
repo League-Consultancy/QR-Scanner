@@ -1,8 +1,8 @@
-docs
-__pycache__
 .venv
-*.png
-image_generator.py
-verify_scan.py
-test_cam.py
+.postman
+postman
+AGENTS.md
+logs
+__pycache__
 *.json
+*.png

@@ -1,0 +1,105 @@
+<!-- MODAL 4: SCAN HISTORY & AUDIT LOGS -->
+<div id="modal-history" class="modal-overlay">
+  <div class="modal-container history-modal-container">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <h2 class="modal-title">DETECTION HISTORY & TIMELINE</h2>
+        <span class="modal-subtitle">Audit trails of every diamond entrance & departure</span>
+      </div>
+      <div class="modal-actions-right">
+        <button id="btn-export-history-csv" class="modal-action-btn" title="Export queried logs to CSV">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span>Export CSV</span>
+        </button>
+        <button id="modal-history-close" class="modal-close-btn">&times;</button>
+      </div>
+    </div>
+
+    <div class="modal-body history-modal-body">
+      <!-- History Filters Header -->
+      <div class="history-controls-panel">
+        <!-- Preset Quick Filters -->
+        <div class="history-presets-row">
+          <span class="history-filter-label">Quick Ranges:</span>
+          <button class="preset-btn active" data-preset="today">Today</button>
+          <button class="preset-btn" data-preset="yesterday">Yesterday</button>
+          <button class="preset-btn" data-preset="week">Last 7 Days</button>
+          <button class="preset-btn" data-preset="month">Last 30 Days</button>
+        </div>
+
+        <!-- Custom Date Range & Code Filter Form -->
+        <div class="history-filter-inputs-grid">
+          <div class="history-field">
+            <label for="history-start-date">From Date</label>
+            <input type="date" id="history-start-date" class="history-input">
+          </div>
+
+          <div class="history-field">
+            <label for="history-end-date">To Date <span class="field-hint">(Max 60 days)</span></label>
+            <input type="date" id="history-end-date" class="history-input">
+          </div>
+
+          <div class="history-field code-field">
+            <label for="history-filter-code">Specific Code (Optional)</label>
+            <input type="text" id="history-filter-code" class="history-input" placeholder="e.g. 00000382 or DIA-001" autocomplete="off">
+          </div>
+
+          <div class="history-field button-field">
+            <button id="btn-query-history" class="btn-primary-query">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <span>Search Logs</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- History Metrics Summary -->
+      <div class="history-summary-strip">
+        <div class="hist-metric">
+          <span class="hist-metric-label">TOTAL VISITS</span>
+          <span class="hist-metric-val" id="hist-stat-visits">0</span>
+        </div>
+        <div class="hist-metric">
+          <span class="hist-metric-label">UNIQUE DIAMONDS</span>
+          <span class="hist-metric-val" id="hist-stat-unique">0</span>
+        </div>
+        <div class="hist-metric">
+          <span class="hist-metric-label">CUMULATIVE DWELL TIME</span>
+          <span class="hist-metric-val" id="hist-stat-dwell">--</span>
+        </div>
+        <div class="hist-metric">
+          <span class="hist-metric-label">ACTIVE ON TABLE</span>
+          <span class="hist-metric-val highlight-green" id="hist-stat-active">0</span>
+        </div>
+      </div>
+
+      <!-- History Data Table Container -->
+      <div class="history-table-container">
+        <table class="history-table" id="tbl-history-results">
+          <thead>
+            <tr>
+              <th>Diamond Code</th>
+              <th>Date</th>
+              <th>Time In</th>
+              <th>Time Out</th>
+              <th>Duration</th>
+              <th>Shape & Carat</th>
+            </tr>
+          </thead>
+          <tbody id="tbl-history-results-body">
+            <tr>
+              <td colspan="6" class="history-loading-cell">Loading history records...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

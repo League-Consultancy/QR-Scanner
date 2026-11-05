@@ -1,0 +1,31 @@
+<!-- OVERLAY 2: CAMERA FEED SCREEN -->
+<div class="modal-overlay" id="overlay-cam-feed">
+  <div class="modal-window feed-window">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <span class="modal-title-icon">📷</span>
+        <div>
+          <h2 class="modal-title">Live Camera Stream</h2>
+          <span class="modal-subtitle">720p @ 25 FPS • Real Camera Optical Feed</span>
+        </div>
+      </div>
+      <button id="btn-close-cam-feed" class="btn-modal-close" title="Close stream">✕</button>
+    </div>
+
+    <div class="feed-canvas-wrap">
+      <img id="camera-stream-img" alt="Live Camera Feed" style="width:100%; height:100%; object-fit:contain; display:block; background:#080a0f;">
+      <div class="feed-live-watermark">● LIVE STREAM</div>
+    </div>
+
+    <div class="feed-footer">
+      <div class="feed-status-meta">
+        <span>Detections: <strong id="feed-detection-count">0 Codes</strong></span>
+        <span>Latency: <strong>14ms</strong></span>
+      </div>
+      <div class="feed-footer-actions">
+        <button id="btn-feed-freeze" class="btn-subtle">Freeze</button>
+        <button id="btn-close-cam-feed-btn" class="btn-filter-cancel">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

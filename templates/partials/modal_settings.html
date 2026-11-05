@@ -1,0 +1,140 @@
+<!-- OVERLAY: SETTINGS & ACCESS CONTROL MODAL -->
+<div class="modal-overlay" id="overlay-settings">
+  <div class="modal-window settings-window">
+    
+    <!-- Header -->
+    <div class="settings-modal-header">
+      <div class="settings-modal-title">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span>System Settings & Access Control</span>
+      </div>
+      <button id="btn-close-settings" class="btn-modal-close" title="Close Settings">✕</button>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="settings-tabs-bar">
+      <button class="settings-tab-btn active" id="tab-btn-settings-account">
+        <span>My Account</span>
+      </button>
+      {% if (session.get('user') or {}).get('role') == 'admin' %}
+      <button class="settings-tab-btn" id="tab-btn-settings-users">
+        <span>User Management & Roles</span>
+        <span class="settings-admin-badge">ADMIN</span>
+      </button>
+      {% endif %}
+    </div>
+
+    <!-- Tab 1: My Account & Password Change -->
+    <div class="settings-tab-content active" id="tab-content-settings-account">
+      
+      <!-- User Profile Card -->
+      <div class="settings-profile-card">
+        <div class="settings-avatar">
+          <span>👤</span>
+        </div>
+        <div class="settings-profile-info">
+          <div class="settings-username">{{ (session.get('user') or {}).get('username', 'Admin') }}</div>
+          <div class="settings-user-role">Role: <strong class="role-badge role-{{ (session.get('user') or {}).get('role', 'operator') }}">{{ (session.get('user') or {}).get('role', 'operator') | upper }}</strong></div>
+        </div>
+      </div>
+
+      <!-- Change Password Section -->
+      <div class="settings-section">
+        <div class="settings-section-title">Change Password</div>
+        <div id="account-pass-feedback" class="settings-feedback" style="display:none;"></div>
+        
+        <form id="form-change-password" class="settings-form">
+          <div class="settings-field">
+            <label for="input-current-pass">Current Password</label>
+            <input type="password" id="input-current-pass" class="settings-input" placeholder="Enter current password" required />
+          </div>
+
+          <div class="settings-field-row">
+            <div class="settings-field">
+              <label for="input-new-pass">New Password</label>
+              <input type="password" id="input-new-pass" class="settings-input" placeholder="Min 6 characters" minlength="6" required />
+            </div>
+            <div class="settings-field">
+              <label for="input-confirm-pass">Confirm New Password</label>
+              <input type="password" id="input-confirm-pass" class="settings-input" placeholder="Repeat new password" minlength="6" required />
+            </div>
+          </div>
+
+          <div class="settings-actions">
+            <button type="submit" id="btn-change-pass" class="settings-btn-primary">
+              <span>Update Password</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+
+    <!-- Tab 2: User Management (Admin Only) -->
+    {% if (session.get('user') or {}).get('role') == 'admin' %}
+    <div class="settings-tab-content" id="tab-content-settings-users">
+      
+      <!-- Add New User Card -->
+      <div class="settings-section">
+        <div class="settings-section-title">Add New User Account</div>
+        <p class="settings-section-hint">Only administrators can create staff accounts. Public self-registration is closed.</p>
+        <div id="admin-create-user-feedback" class="settings-feedback" style="display:none;"></div>
+
+        <form id="form-create-user" class="settings-form">
+          <div class="settings-field-row">
+            <div class="settings-field">
+              <label for="input-admin-new-user">Username</label>
+              <input type="text" id="input-admin-new-user" class="settings-input" placeholder="e.g. operator_alex" minlength="3" required />
+            </div>
+            <div class="settings-field">
+              <label for="input-admin-new-pass">Temporary Password</label>
+              <input type="password" id="input-admin-new-pass" class="settings-input" placeholder="Min 6 characters" minlength="6" required />
+            </div>
+            <div class="settings-field">
+              <label for="select-admin-new-role">Role</label>
+              <select id="select-admin-new-role" class="settings-select">
+                <option value="operator">Operator</option>
+                <option value="admin">Administrator</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="settings-actions">
+            <button type="submit" id="btn-admin-add-user" class="settings-btn-primary">
+              <span>+ Create Account</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- User Accounts Table -->
+      <div class="settings-section">
+        <div class="settings-section-title">Registered Accounts</div>
+        <div class="settings-table-wrap">
+          <table class="settings-users-table">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Created</th>
+                <th style="text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="table-admin-users-body">
+              <tr>
+                <td colspan="4" style="text-align: center; color: var(--text-dim);">Loading accounts...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+

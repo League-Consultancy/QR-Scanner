@@ -1,0 +1,103 @@
+<!-- SIDEBAR -->
+<aside class="app-sidebar">
+  <div class="sidebar-section-title">CONTROL CENTER</div>
+  
+  <div class="sidebar-actions">
+    <!-- Button 1: Calibration -->
+    <button id="btn-open-calibration" class="sidebar-btn btn-calibration">
+      <div class="btn-icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="22" y1="12" x2="18" y2="12"/>
+          <line x1="6" y1="12" x2="2" y2="12"/>
+          <line x1="12" y1="6" x2="12" y2="2"/>
+          <line x1="12" y1="22" x2="12" y2="18"/>
+        </svg>
+      </div>
+      <div class="btn-text">
+        <span class="btn-primary-text">Re-Calibrate</span>
+        <span class="btn-sub-text">Align Camera & Projector</span>
+      </div>
+    </button>
+
+    <!-- Button 2: Camera Feed -->
+    <button id="btn-open-cam-feed" class="sidebar-btn btn-feed">
+      <div class="btn-icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+      </div>
+      <div class="btn-text">
+        <span class="btn-primary-text">Camera Feed</span>
+        <span class="btn-sub-text">Live Image Stream</span>
+      </div>
+    </button>
+
+    <!-- Button 3: Export Report -->
+    <button id="btn-open-export" class="sidebar-btn btn-export">
+      <div class="btn-icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </div>
+      <div class="btn-text">
+        <span class="btn-primary-text">Export Report</span>
+        <span class="btn-sub-text">Reconcile & Print PDF</span>
+      </div>
+    </button>
+
+    <!-- Button 4: Scan History -->
+    <button id="btn-open-history" class="sidebar-btn btn-history">
+      <div class="btn-icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <div class="btn-text">
+        <span class="btn-primary-text">Scan History</span>
+        <span class="btn-sub-text">Timeline & Audit Logs</span>
+      </div>
+    </button>
+  </div>
+
+  <!-- SIDEBAR CODES TRACKER (INVENTORY & CAMERA VIEW) -->
+  <div class="sidebar-codes-panel">
+    <div class="codes-tabs-header">
+      <button class="codes-tab-btn active" id="tab-btn-inview">
+        <span>IN VIEW</span>
+        <span class="tab-badge" id="badge-inview-count">0</span>
+      </button>
+      <button class="codes-tab-btn" id="tab-btn-inventory">
+        <span>INVENTORY</span>
+        <span class="tab-badge" id="badge-inv-count">0</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: CODES IN CAMERA VIEW -->
+    <div class="codes-tab-content active" id="tab-content-inview">
+      <div class="codes-list-wrap" id="list-inview-codes">
+        <div class="codes-empty-state">No codes currently detected in camera view</div>
+      </div>
+    </div>
+
+    <!-- TAB 2: CODES IN MASTER INVENTORY -->
+    <div class="codes-tab-content" id="tab-content-inventory">
+      <div class="codes-search-mini">
+        <input type="text" id="sidebar-inv-search" placeholder="Filter codes..." autocomplete="off">
+      </div>
+      <div class="codes-list-wrap" id="list-inventory-codes">
+        <div class="codes-empty-state">Loading inventory...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <span class="footer-hint">Press <kbd>/</kbd> to search</span>
+  </div>
+</aside>

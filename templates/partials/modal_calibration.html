@@ -1,0 +1,36 @@
+<!-- OVERLAY 1: CALIBRATION SCREEN -->
+<div class="modal-overlay" id="overlay-calibration">
+  <div class="modal-window calibration-window">
+    <!-- Top Instruction Bar -->
+    <div class="calibration-topbar">
+      <div class="calibration-instruction-group">
+        <div class="calib-step-indicator" id="calib-step-tag">STEP 1 OF 4</div>
+        <div class="calib-instruction-text" id="calib-instruction">
+          Click on projector reference <strong>Point 1: Top-Left (TL)</strong> on the camera canvas below.
+        </div>
+      </div>
+      <div class="calibration-top-actions">
+        <div class="calib-points-pill" id="calib-points-count">Points: 0 / 4</div>
+        <button id="btn-reset-calib-points" class="btn-subtle" title="Reset all 4 points">Reset</button>
+        <button id="btn-close-calibration" class="btn-modal-close" title="Close calibration">✕</button>
+      </div>
+    </div>
+
+    <!-- Camera Interactive Canvas for Calibration -->
+    <div class="calibration-canvas-wrap">
+      <canvas id="calibration-canvas"></canvas>
+      <div class="calib-crosshair-hint">Click accurately on the projected crosshairs</div>
+    </div>
+
+    <!-- Calibration Bottom Footer -->
+    <div class="calibration-footer">
+      <div class="calib-coords-preview" id="calib-coords-preview">
+        Coordinates: --
+      </div>
+      <div class="calibration-footer-buttons">
+        <button id="btn-cancel-calibration" class="btn-filter-cancel">Cancel</button>
+        <button id="btn-save-calibration" class="btn-filter-save" disabled>Compute & Save Homography</button>
+      </div>
+    </div>
+  </div>
+</div>

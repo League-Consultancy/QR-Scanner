@@ -1,0 +1,212 @@
+<!-- OVERLAY 3: EXPORT & PRINT SCREEN -->
+<div class="modal-overlay" id="overlay-export">
+  <div class="modal-window export-window">
+    <!-- Step 1: Report Configuration & Selection Screen -->
+    <div class="export-config-container" id="export-config-screen">
+      <div class="config-modal-header">
+        <div class="config-title-group">
+          <span class="config-header-icon">📑</span>
+          <div>
+            <h2 class="config-modal-title">EXPORT AUDIT REPORT</h2>
+            <p class="config-modal-subtitle">Select the specific report type or customize data sets to export.</p>
+          </div>
+        </div>
+        <button id="btn-close-export-config" class="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="config-options-grid">
+        <!-- Option 1: Full Audit -->
+        <label class="report-type-card active" data-type="full">
+          <input type="radio" name="report-scope" value="full" checked>
+          <div class="card-radio-indicator"></div>
+          <div class="card-content">
+            <div class="card-title-row">
+              <span class="card-title">Full Reconciliation Audit</span>
+              <span class="card-badge badge-full">ALL 3 STATES</span>
+            </div>
+            <p class="card-desc">Complete executive document with verified inventory, missing stones, and dispute codes.</p>
+          </div>
+        </label>
+
+        <!-- Option 2: Missing Diamonds Only -->
+        <label class="report-type-card" data-type="missing">
+          <input type="radio" name="report-scope" value="missing">
+          <div class="card-radio-indicator"></div>
+          <div class="card-content">
+            <div class="card-title-row">
+              <span class="card-title">Missing Diamonds Report</span>
+              <span class="card-badge badge-amber">STATE 2 ONLY</span>
+            </div>
+            <p class="card-desc">Audit list of diamonds cataloged in CRM inventory that are missing from the table surface.</p>
+          </div>
+        </label>
+
+        <!-- Option 3: Disputes Only -->
+        <label class="report-type-card" data-type="disputes">
+          <input type="radio" name="report-scope" value="disputes">
+          <div class="card-radio-indicator"></div>
+          <div class="card-content">
+            <div class="card-title-row">
+              <span class="card-title">Disputes & Rogue Codes Report</span>
+              <span class="card-badge badge-rose">STATE 3 ONLY</span>
+            </div>
+            <p class="card-desc">Detailed log of unknown or foreign codes detected on the table with no CRM registration.</p>
+          </div>
+        </label>
+
+        <!-- Option 4: Verified On Surface Only -->
+        <label class="report-type-card" data-type="verified">
+          <input type="radio" name="report-scope" value="verified">
+          <div class="card-radio-indicator"></div>
+          <div class="card-content">
+            <div class="card-title-row">
+              <span class="card-title">Verified Diamond Stock Report</span>
+              <span class="card-badge badge-emerald">STATE 1 ONLY</span>
+            </div>
+            <p class="card-desc">Manifest of all confirmed matching diamonds currently placed on the inspection surface.</p>
+          </div>
+        </label>
+      </div>
+
+      <!-- Additional Options Strip -->
+      <div class="config-toggles-strip">
+        <label class="config-checkbox-label">
+          <input type="checkbox" id="chk-include-metrics" checked>
+          <span>Include Top Summary Metrics Strip</span>
+        </label>
+        <label class="config-checkbox-label">
+          <input type="checkbox" id="chk-auto-print" checked>
+          <span>Automatically open Print Dialog on generation</span>
+        </label>
+      </div>
+
+      <!-- Action Footer -->
+      <div class="config-footer-actions">
+        <button id="btn-cancel-export-config" class="btn-filter-cancel">Cancel</button>
+        <button id="btn-generate-custom-report" class="btn-primary-query">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 6 2 18 2 18 9"/>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+            <rect x="6" y="14" width="12" height="8"/>
+          </svg>
+          <span>Generate & View Report</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loader State (Shown during fetch) -->
+    <div class="export-loader-container" id="export-loader" style="display: none;">
+      <div class="diamond-spinner">
+        <div class="spin-ring"></div>
+        <span class="spin-icon">💎</span>
+      </div>
+      <h3 class="export-loading-title">Generating Audit & Reconciliation Report...</h3>
+      <p class="export-loading-desc">Comparing physical frame codes with inventory master ledger and compiling disputes.</p>
+    </div>
+
+    <!-- Report Container (Becomes visible for printing) -->
+    <div class="export-report-container" id="export-report" style="display: none;">
+      <div class="report-header">
+        <div class="report-title-area">
+          <div class="report-brand-row">
+            <span class="report-brand-gem">💎</span>
+            <h1 class="report-brand" id="report-main-title">LUXE-TRACE INVENTORY RECONCILIATION REPORT</h1>
+          </div>
+          <div class="report-sub-meta">
+            <span id="report-timestamp">Generated: --</span>
+            <span class="meta-dot">•</span>
+            <span>Location: Optical Sorting Bay</span>
+            <span class="meta-dot">•</span>
+            <span id="report-scope-meta">Scope: Full Reconciliation Audit</span>
+          </div>
+        </div>
+        <div class="report-actions-print no-print">
+          <button id="btn-back-to-config" class="btn-subtle" style="margin-right:8px;">← Change Report</button>
+          <button id="btn-trigger-print" class="btn-filter-save">Print Document</button>
+          <button id="btn-close-export" class="btn-filter-cancel">Close</button>
+        </div>
+      </div>
+
+      <!-- Printable summary stats (3 States clearly visualized) -->
+      <div class="report-stats-grid" id="rpt-stats-strip">
+        <div class="report-stat-box">
+          <div class="stat-number" id="rpt-total-inv">0</div>
+          <div class="stat-name">Inventory Total</div>
+        </div>
+        <div class="report-stat-box" id="rpt-stat-box-verified">
+          <div class="stat-number highlight-green" id="rpt-total-matched">0</div>
+          <div class="stat-name">State 1: Verified</div>
+        </div>
+        <div class="report-stat-box" id="rpt-stat-box-missing">
+          <div class="stat-number highlight-amber" id="rpt-total-missing">0</div>
+          <div class="stat-name">State 2: Missing</div>
+        </div>
+        <div class="report-stat-box" id="rpt-stat-box-disputes">
+          <div class="stat-number highlight-red" id="rpt-total-disputes">0</div>
+          <div class="stat-name">State 3: Disputes</div>
+        </div>
+      </div>
+
+      <!-- Reconciliation Tables (3 States) -->
+      <!-- State 1: Present in Both -->
+      <div class="report-section" id="rpt-verified-section">
+        <h3 class="report-section-title">1. Verified Diamonds (Present on Surface & In Inventory)</h3>
+        <table class="report-table" id="tbl-frame-codes">
+          <thead>
+            <tr>
+              <th>Stock ID</th>
+              <th>Shape</th>
+              <th>Carat</th>
+              <th>Color</th>
+              <th>Clarity</th>
+              <th>First Seen</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbl-frame-codes-body">
+            <!-- Dynamically generated rows -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- State 2: Present in Inventory, Absent in View (Missing) -->
+      <div class="report-section" id="rpt-missing-section">
+        <h3 class="report-section-title missing-title">2. Missing from Surface (In Inventory, Not in View)</h3>
+        <table class="report-table" id="tbl-missing-codes">
+          <thead>
+            <tr>
+              <th>Stock ID</th>
+              <th>Shape</th>
+              <th>Carat</th>
+              <th>Color / Clarity</th>
+              <th>Certificate No</th>
+              <th>Expected Location</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbl-missing-codes-body">
+            <!-- Dynamically generated rows -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- State 3: Present in View, Absent from Inventory (Disputes) -->
+      <div class="report-section" id="rpt-disputes-section">
+        <h3 class="report-section-title dispute-title">3. Disputes & Rogue Codes (In View, Not in Inventory)</h3>
+        <table class="report-table" id="tbl-disputes">
+          <thead>
+            <tr>
+              <th>Code Scanned</th>
+              <th>Detected Position</th>
+              <th>First Seen</th>
+              <th>Dispute Detail</th>
+            </tr>
+          </thead>
+          <tbody id="tbl-disputes-body">
+            <!-- Disputed items -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LUXE-TRACE // Optical Inventory & Picking Engine</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="/static/css/style.css?v=3">
+</head>
+<body>
+  <div class="app-shell">
+    
+    <!-- Header -->
+    {% include 'partials/header.html' %}
+
+    <!-- Body Layout: Sidebar + Main Workspace -->
+    <div class="app-body">
+      
+      <!-- Sidebar -->
+      {% include 'partials/sidebar.html' %}
+
+      <!-- Main Content Area -->
+      <main class="app-main">
+        
+        <!-- Search Bar Area -->
+        <section class="search-bar-section">
+          <div class="search-controls-row">
+            <div class="search-input-wrapper">
+              <span class="search-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+              </span>
+              <input 
+                type="text" 
+                id="global-search-input" 
+                class="search-input" 
+                placeholder="Search single or multiple codes (e.g. DIA-101, DIA-102, DIA-103)..." 
+                autocomplete="off"
+              />
+              <button id="search-clear-btn" class="search-clear-btn" title="Clear text input" style="display:none;">✕</button>
+
+              <!-- Live In-View Autocomplete Preview Dropdown -->
+              <div id="search-inview-dropdown" class="search-inview-dropdown" style="display:none;">
+                <div class="dropdown-header">
+                  <span class="dropdown-header-title">DIAMONDS PRESENT IN CAMERA VIEW</span>
+                  <span id="dropdown-match-badge" class="dropdown-match-badge">0 Found</span>
+                </div>
+                <div id="dropdown-inview-list" class="dropdown-inview-list"></div>
+              </div>
+            </div>
+            <div class="search-buttons-group">
+              <button id="btn-project-highlight" class="btn-highlight-trigger" title="Project highlight onto active matches">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                </svg>
+                <span>Highlight On Table</span>
+              </button>
+              <button id="btn-clear-highlights" class="btn-clear-highlights-trigger" title="Clear all active highlights from table and projector" style="display:none;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+                <span>Clear Highlights</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Active Highlight Batches Tray -->
+          <div id="active-highlights-tray" class="active-highlights-tray" style="display:none;">
+            <div class="tray-title">Active Search Layers:</div>
+            <div id="highlight-batches-list" class="highlight-batches-list"></div>
+          </div>
+        </section>
+
+        <!-- Dynamic Inventory Filters -->
+        <section class="filters-panel-section">
+          <div class="filters-header">
+            <div class="filters-title-group">
+              <span class="filters-icon">🎛️</span>
+              <h2 class="filters-title">INVENTORY SPECIFICATION FILTERS</h2>
+              <span class="filters-badge" id="filter-match-count">0 Stones Matching</span>
+            </div>
+
+            <!-- Dirty State Action Bar (Save & Cancel) -->
+            <div class="filters-action-bar" id="filters-action-bar">
+              <span class="unsaved-indicator">
+                <span class="dirty-dot"></span> Unsaved changes
+              </span>
+              <button id="btn-cancel-filters" class="btn-filter-cancel">Cancel</button>
+              <button id="btn-save-filters" class="btn-filter-save">Apply & Save</button>
+            </div>
+          </div>
+
+          <!-- Dynamically populated filter chips and sliders based on Inventory -->
+          <div class="filters-grid" id="dynamic-filters-container">
+            <!-- Injected via JavaScript from unique inventory items -->
+          </div>
+
+          <!-- Section Below Filters: Filter Matching Diamonds List with All Properties -->
+          <div class="filter-matches-results-section" id="filter-matches-results-section">
+            <div class="filter-results-header">
+              <div class="results-header-left">
+                <span class="results-header-icon">💎</span>
+                <span class="results-header-title">MATCHING DIAMONDS IN INVENTORY</span>
+                <span id="results-count-badge" class="results-count-badge">0 Found</span>
+                <span id="results-inview-count-badge" class="results-inview-count-badge">0 in view</span>
+              </div>
+              <div class="results-header-actions">
+                <button type="button" id="btn-select-all-matches" class="btn-matches-secondary">Select All</button>
+                <button type="button" id="btn-select-inview-matches" class="btn-matches-secondary">Select In-View Only</button>
+                <button type="button" id="btn-clear-selected-matches" class="btn-matches-secondary">Deselect All</button>
+                <button type="button" id="btn-highlight-selected-matches" class="btn-highlight-matches" disabled>
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                  </svg>
+                  <span id="label-highlight-selected">Highlight Selected (0)</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- List of Matching Diamonds -->
+            <div id="filter-matches-cards-list" class="filter-matches-cards-list">
+              <div class="filter-matches-empty">Select any filter above to inspect matching diamond specifications.</div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- Modals & Overlays -->
+    {% include 'partials/modal_calibration.html' %}
+    {% include 'partials/modal_camera_feed.html' %}
+    {% include 'partials/modal_export.html' %}
+    {% include 'partials/modal_history.html' %}
+    {% include 'partials/modal_settings.html' %}
+
+  </div>
+
+  <!-- Modular Scripts -->
+  <script src="/static/js/modules/state.js?v=4"></script>
+  <script src="/static/js/modules/filters.js?v=4"></script>
+  <script src="/static/js/modules/calibration.js?v=4"></script>
+  <script src="/static/js/modules/stream.js?v=4"></script>
+  <script src="/static/js/modules/surface.js?v=4"></script>
+  <script src="/static/js/modules/export_report.js?v=4"></script>
+  <script src="/static/js/modules/history_modal.js?v=4"></script>
+  <script src="/static/js/modules/sidebar_tracker.js?v=4"></script>
+  <script src="/static/js/modules/settings_modal.js?v=4"></script>
+  <script src="/static/js/app.js?v=4"></script>
+</body>
+</html>
