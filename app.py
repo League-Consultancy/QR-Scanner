@@ -167,6 +167,12 @@ def background_detection_loop(camera_index=1, interval=5):
     global latest_frame, frame_counter, detected_inventory
 
     cap = cv2.VideoCapture(camera_index)
+
+    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+    
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
+
     if not cap.isOpened():
         print(f"[Vision Engine] Warning: Camera {camera_index} unavailable. Running synthetic loop.")
         cap = None
