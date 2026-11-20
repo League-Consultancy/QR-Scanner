@@ -797,8 +797,7 @@ signal.signal(signal.SIGTERM, shutdown_system)
 
 if __name__ == "__main__":
     # 1. Start camera detection thread
-    detection_thread = threading.Thread(target=background_detection_loop, args=("http://192.168.1.3:8080/video", 5), daemon=True)
-    # detection_thread = threading.Thread(target=background_detection_loop, args=(1, 5), daemon=True)
+    detection_thread = threading.Thread(target=background_detection_loop, args=(0, 5), daemon=True)
     detection_thread.start()
 
     # 2. Start continuous 1080p projector display thread (fullscreen on 2nd monitor)
